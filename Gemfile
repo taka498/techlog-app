@@ -50,9 +50,9 @@ group :development, :test do
   gem 'brakeman', require: false
 
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
-  gem 'rubocop-rails-omakase', require: false
-  gem 'rspec-rails'
   gem 'factory_bot_rails'
+  gem 'rspec-rails'
+  gem 'rubocop-rails-omakase', require: false
 end
 
 group :development do
@@ -61,8 +61,8 @@ group :development do
   gem 'rubocop-performance', require: false
   gem 'rubocop-rails', require: false
   gem 'rubocop-rspec'
-  gem 'web-console'
   gem 'spring-commands-rspec'
+  gem 'web-console'
 end
 
 group :test do
