@@ -1,32 +1,70 @@
 require 'rails_helper'
  
-RSpec.describe 'Posts', type: :request do
-  before { @user = create(:user) } # 各テストで使用できるユーザーを作成
+describe 'Post', type: :system do
+  before do
+    driven_by :rack_test
+    @user = create(:user) # ログイン用ユーザー作成
+    @post = create(:post, title: 'RSpec学習完了', content: 'System Specを作成した', user_id: @user.id)
+  end
  
-  describe 'GET /posts/new' do
+  # 投稿フォーム
+  let(:title) { 'テストタイトル' }
+  let(:content) { 'テスト本文' }
+ 
+  describe 'ログ投稿機能の検証' do
+    # ログ投稿を行う一連の操作を subject にまとめる
+    subject do
+      fill_in 'post_title', with: title
+      fill_in 'post_content', with: content
+      click_button 'ログを記録'
+    end
+ 
     context 'ログインしていない場合' do
-      it 'HTTPステータス302を返す' do
-        get '/posts/new'
-        expect(response).to have_http_status(302)
-      end
- 
-      it 'ログインページにリダイレクトされる' do
-        get '/posts/new'
-        expect(response).to redirect_to '/users/sign_in'
+      before { visit '/posts/new' }
+      it 'ログインページへリダイレクトする' do
+        expect(current_path).to eq('/users/sign_in')
+        expect(page).to have_content('ログインしてください。')
       end
     end
  
     context 'ログインしている場合' do
-      before { sign_in @user }
-      it 'HTTPステータス200を返す' do
-        get '/posts/new'
-        expect(response).to have_http_status(200)
+      before do
+        sign_in @user
+        visit '/posts/new'
+      end
+      it 'ログインページへリダイレクトしない' do
+        expect(current_path).not_to eq('/users/sign_in')
       end
  
-      it 'ログインページにリダイレクトされない' do
-        get '/posts/new'
-        expect(response).not_to redirect_to '/users/sign_in'
+      context 'パラメータが正常な場合' do
+        it 'Postを作成できる' do
+          expect { subject }.to change(Post, :count).by(1)
+          expect(current_path).to eq('/')
+          expect(page).to have_content('投稿しました')
+        end
       end
+ 
+      context 'パラメータが異常な場合' do
+        let(:title) { nil }
+        it 'Postを作成できない' do
+          expect { subject }.not_to change(Post, :count)
+          expect(page).to have_content('投稿に失敗しました')
+        end
+        it '入力していた内容は維持される' do
+          subject
+          expect(page).to have_field('post_content', with: content)
+        end
+      end
+    end
+  end
+ 
+  describe 'ログ詳細機能の検証' do
+    before { visit "/posts/#{@post.id}" }
+ 
+    it 'Postの詳細が表示される' do
+      expect(page).to have_content('RSpec学習完了')
+      expect(page).to have_content('System Specを作成した')
+      expect(page).to have_content(@user.nickname)
     end
   end
 end

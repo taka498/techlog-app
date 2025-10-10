@@ -21,7 +21,8 @@ class PostsController < ApplicationController
     end
   end
  
-  def show
+ def show
+    @post = Post.find_by(id: params[:id])
   end
  
   def destroy
