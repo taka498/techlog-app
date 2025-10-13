@@ -10,8 +10,8 @@ class PostsController < ApplicationController
   end
  
   def create
-    @post = Post.new(post_params)
-    @post.user_id = current_user.id
+    @post = Post.new(post_params) # ストロングパラメータを使ってフォームから受け取ったパラメータを許可
+    @post.user_id = current_user.id # ログインユーザのIDを代入して関連付け
  
     if @post.save
       flash[:notice] = '投稿しました'
@@ -27,7 +27,18 @@ class PostsController < ApplicationController
   end
  
   def destroy
+  # 削除対象の投稿を取得
+  post = Post.find_by(id: params[:id])
+ 
+  # 投稿者とログインユーザーが一致するかを確認
+  if post.user == current_user
+    post.destroy
+    flash[:notice] = '投稿が削除されました'
   end
+ 
+  # 投稿一覧ページにリダイレクト
+  redirect_to posts_path
+end
  
   private
  
